@@ -1,0 +1,48 @@
+name: PR Code Review and Verification
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  review:
+    name: Automated Code Review
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Checkout mã nguồn PR
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # 2. Thiết lập JDK 17
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: 'maven'
+
+    # 3. Tạo báo cáo Checkstyle XML và chạy Unit Test
+    - name: Generate Checkstyle Report and Run Tests
+      run: |
+        mvn -B checkstyle:checkstyle
+        mvn -B test
+
+    # 4. Bot tự động comment phản hồi trực tiếp vào từng dòng code bị lỗi trên PR
+    - name: Post Checkstyle Inline Feedback
+      uses: dbelyaev/action-checkstyle@v0.4.4
+      if: always()
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        checkstyle_file: 'target/checkstyle-result.xml'
+        reporter: 'github-pr-review' # Đăng comment dạng review trực tiếp vào dòng code PR
+        level: 'warning'
+
+    # 5. Kiểm tra nghiêm ngặt: Fail build nếu có lỗi checkstyle để khóa nút Merge
+    - name: Enforce Checkstyle Rule
+      run: mvn -B checkstyle:check -Dcheckstyle.failsOnError=true
