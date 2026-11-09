@@ -7,6 +7,14 @@ import org.slf4j.LoggerFactory;
 public class MathUtils {
     private static final Logger logger = LoggerFactory.getLogger(MathUtils.class);
 
+    public int Bad_Addition_Method(int a,int b){
+      return a+b;
+    }
+
+    public int add(int a, int b) {
+        return a + b;
+    }
+
     public int add(int a, int b) {
         logger.info("Executing add: {} + {}", a, b);
         return a + b;
